@@ -41,6 +41,11 @@ while True:
 
         # add time stamp
         hands_frame = cv2.putText(hands_frame, current_time, (10, 50), font, 1, (255, 0, 0), 2, cv2.LINE_AA)
+
+        # ROI to later processing
+        right_hand_ROI = hands_frame[200:330, 70:200]
+        left_hand_ROI = hands_frame[200:330, 440:570]
+
         hands_frame = cv2.rectangle(hands_frame, (70, 200), (200, 330), (255, 0, 0), 2)
         hands_frame = cv2.rectangle(hands_frame, (440, 200), (570, 330), (255, 0, 0), 2)
 
@@ -60,6 +65,8 @@ while True:
         now = datetime.datetime.now()
         current_time = now.strftime("%H:%M:%S")
         legs_frame = cv2.putText(legs_frame, current_time, (10, 50), font, 1, (255, 0, 0), 2, cv2.LINE_AA)
+        right_leg_ROI = legs_frame[200:330, 70:200]
+        left_leg_ROI = legs_frame[200:330, 440:570]
         legs_frame = cv2.rectangle(legs_frame, (70, 200), (200, 330), (255, 0, 0), 2)
         legs_frame = cv2.rectangle(legs_frame, (440, 200), (570, 330), (255, 0, 0), 2)
         out_legs.write(legs_frame)
