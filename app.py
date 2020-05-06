@@ -4,10 +4,13 @@
 import cv2
 import datetime
 import numpy as np
+from matplotlib import pyplot as plot
 
 # cam init
 hands_cam0 = cv2.VideoCapture(0)
+
 legs_cam1 = cv2.VideoCapture(1)
+legs_cam1.set(15, -2.0)
 
 # font for time stamp
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -26,6 +29,8 @@ out_legs = cv2.VideoWriter(file_name_legs, cv2.VideoWriter_fourcc('M', 'J', 'P',
 start_flag_hands = False
 start_flag_legs = False
 
+# ExG samples table
+Exg_samples = []
 
 # slider to adjust image parameters
 def empty(a):
@@ -36,10 +41,10 @@ track_bar_name = "Skin color setup"
 cv2.namedWindow("Skin color setup")
 cv2.resizeWindow(track_bar_name, 640, 240)
 cv2.createTrackbar("Hue Min", track_bar_name, 0, 179, empty)
-cv2.createTrackbar("Hue Max", track_bar_name, 179, 179, empty)
-cv2.createTrackbar("Sat Min", track_bar_name, 0, 255, empty)
-cv2.createTrackbar("Sat Max", track_bar_name, 255, 255, empty)
-cv2.createTrackbar("Val Min", track_bar_name, 0, 255, empty)
+cv2.createTrackbar("Hue Max", track_bar_name, 77, 179, empty)
+cv2.createTrackbar("Sat Min", track_bar_name, 88, 255, empty)
+cv2.createTrackbar("Sat Max", track_bar_name, 193, 255, empty)
+cv2.createTrackbar("Val Min", track_bar_name, 71, 255, empty)
 cv2.createTrackbar("Val Max", track_bar_name, 255, 255, empty)
 
 while True:
@@ -80,6 +85,38 @@ while True:
         right_hand_ROI = hands_frame[200:330, 70:200]
         left_hand_ROI = hands_frame[200:330, 440:570]
 
+        # Taking VPG signal (ExG method)
+
+        # image[:, :, 0] is R channel, replace the rest by 0.
+        imgLeftHand_R = left_hand_ROI.copy()
+        imgLeftHand_R[:, :, 1:3] = 0
+        # image[:, :, 1] is G channel, replace the rest by 0.
+        imgLeftHand_G = left_hand_ROI.copy()
+        imgLeftHand_G[:, :, [0, 2]] = 0
+        # image[:, :, 2] is B channel, replace the rest by 0.
+        imgLeftHand_B = left_hand_ROI.copy()
+        imgLeftHand_B[:, :, 0:2] = 0
+
+        sum_G = 0
+        sum_R = 0
+        sum_B = 0
+        width = 130
+        height = 130
+        for row in range(width):
+            for col in range(height):
+                if imgLeftHand_G[row, col, 1] != 0 and imgLeftHand_R[row, col, 0] != 0 and imgLeftHand_B[row, col, 2] != 0:
+                    sum_G += imgLeftHand_G[row, col, 1]
+                    sum_R += imgLeftHand_R[row, col, 0]
+                    sum_B += imgLeftHand_B[row, col, 2]
+
+        r = sum_R/(sum_G + sum_R + sum_B)
+        g = sum_G/(sum_G + sum_R + sum_B)
+        b = sum_B/(sum_G + sum_R + sum_B)
+
+        ExG = 2 * g - r - b
+
+        Exg_samples.append(ExG)
+
         hands_frame = cv2.rectangle(hands_frame, (70, 200), (200, 330), (255, 0, 0), 2)
         hands_frame = cv2.rectangle(hands_frame, (440, 200), (570, 330), (255, 0, 0), 2)
 
@@ -115,3 +152,9 @@ out_hands.release()
 
 # Closes all the frames
 cv2.destroyAllWindows()
+
+# VPG signal processing
+
+plot.plot(Exg_samples)
+plot.show()
+
