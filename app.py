@@ -107,8 +107,8 @@ while True:
             for col in range(height):
                 if imgLeftHand_G[row, col, 1] != 0 and imgLeftHand_R[row, col, 0] != 0 and imgLeftHand_B[row, col, 2] != 0:
                     sum_G += imgLeftHand_G[row, col, 1]
-                    sum_R += imgLeftHand_R[row, col, 2]
-                    sum_B += imgLeftHand_B[row, col, 0]
+                    sum_R += imgLeftHand_R[row, col, 0]
+                    sum_B += imgLeftHand_B[row, col, 2]
                     div += 1
         percentage = int((div * 100) / (130 * 130))
         print(f'{percentage} %')
