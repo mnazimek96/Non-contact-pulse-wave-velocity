@@ -100,6 +100,7 @@ while True:
         sum_G = 0
         sum_R = 0
         sum_B = 0
+        div = 0
         width = 130
         height = 130
         for row in range(width):
@@ -108,14 +109,22 @@ while True:
                     sum_G += imgLeftHand_G[row, col, 1]
                     sum_R += imgLeftHand_R[row, col, 0]
                     sum_B += imgLeftHand_B[row, col, 2]
+                    div += 1
+        percentage = int((div * 100) / (130 * 130))
+        print(f'{percentage} %')
 
-        r = sum_R/(sum_G + sum_R + sum_B)
-        g = sum_G/(sum_G + sum_R + sum_B)
-        b = sum_B/(sum_G + sum_R + sum_B)
+        if percentage < 70:
+            hands_frame = cv2.putText(hands_frame, "STOP", (200, 50), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
+        else:
+            hands_frame = cv2.putText(hands_frame, "START", (200, 50), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            if sum_B + sum_G + sum_R != 0:
+                r = sum_R/(sum_G + sum_R + sum_B)
+                g = sum_G/(sum_G + sum_R + sum_B)
+                b = sum_B/(sum_G + sum_R + sum_B)
 
-        ExG = 2 * g - r - b
+                ExG = 2 * g - r - b
 
-        Exg_samples.append(ExG)
+                Exg_samples.append(ExG)
 
         hands_frame = cv2.rectangle(hands_frame, (70, 200), (200, 330), (255, 0, 0), 2)
         hands_frame = cv2.rectangle(hands_frame, (440, 200), (570, 330), (255, 0, 0), 2)
