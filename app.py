@@ -22,6 +22,20 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     y = lfilter(b, a, data)
     return y
 
+
+def split_rgb(roi):
+    # image[:, :, 0] is R channel, replace the rest by 0.
+    imgLeftHand_R = roi.copy()
+    imgLeftHand_R[:, :, 1:3] = 0
+    # image[:, :, 1] is G channel, replace the rest by 0.
+    imgLeftHand_G = roi.copy()
+    imgLeftHand_G[:, :, [0, 2]] = 0
+    # image[:, :, 2] is B channel, replace the rest by 0.
+    imgLeftHand_B = roi.copy()
+    imgLeftHand_B[:, :, 0:2] = 0
+    return imgLeftHand_R, imgLeftHand_G, imgLeftHand_B
+
+
 # cam init
 hands_cam0 = cv2.VideoCapture(0)
 
@@ -102,16 +116,7 @@ while True:
         left_hand_ROI = hands_frame[200:330, 440:570]
 
         # Taking VPG signal (ExG method)
-
-        # image[:, :, 0] is R channel, replace the rest by 0.
-        imgLeftHand_R = left_hand_ROI.copy()
-        imgLeftHand_R[:, :, 1:3] = 0
-        # image[:, :, 1] is G channel, replace the rest by 0.
-        imgLeftHand_G = left_hand_ROI.copy()
-        imgLeftHand_G[:, :, [0, 2]] = 0
-        # image[:, :, 2] is B channel, replace the rest by 0.
-        imgLeftHand_B = left_hand_ROI.copy()
-        imgLeftHand_B[:, :, 0:2] = 0
+        imgLeftHand_R, imgLeftHand_G, imgLeftHand_B = split_rgb(left_hand_ROI)
 
         sum_G = 0
         sum_R = 0
