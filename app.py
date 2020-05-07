@@ -5,6 +5,22 @@ import cv2
 import datetime
 import numpy as np
 from matplotlib import pyplot as plot
+from scipy.signal import butter, freqz, lfilter
+from scipy.fft import fft, fftfreq, fftshift
+
+
+def butter_bandpass(lowcut, highcut, fs, order=5):
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = butter(order, [low, high], btype='band')
+    return b, a
+
+
+def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
 
 # cam init
 hands_cam0 = cv2.VideoCapture(0)
@@ -163,7 +179,17 @@ out_hands.release()
 cv2.destroyAllWindows()
 
 # VPG signal processing
+N = len(Exg_samples)
+time = N / 15
+t = np.linspace(0, time, N)
 
-plot.plot(Exg_samples)
+plot.figure(1)
+plot.plot(t, Exg_samples)
+y = butter_bandpass_filter(Exg_samples, 0.583, 3, 15, order=2)
+plot.plot(t, y)
+plot.xlabel('Time(s)')
+plot.title('VPG signal')
 plot.show()
+
+
 
