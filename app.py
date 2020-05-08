@@ -3,10 +3,13 @@
 
 import cv2
 import datetime
+
+
 import numpy as np
-from matplotlib import pyplot as plot
+from matplotlib import pyplot as plt
 from scipy.signal import butter, freqz, lfilter
 from scipy.fft import fft, fftfreq, fftshift
+import scipy.fftpack
 
 
 def butter_bandpass(lowcut, highcut, fs, order=5):
@@ -61,6 +64,7 @@ start_flag_legs = False
 
 # ExG samples table
 Exg_samples = []
+
 
 # slider to adjust image parameters
 def empty(a):
@@ -134,7 +138,7 @@ while True:
         percentage = int((div * 100) / (130 * 130))
         print(f'{percentage} %')
 
-        if percentage < 70:
+        if percentage < 60:
             hands_frame = cv2.putText(hands_frame, "STOP", (200, 50), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
         else:
             hands_frame = cv2.putText(hands_frame, "START", (200, 50), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
@@ -144,7 +148,6 @@ while True:
                 b = sum_B/(sum_G + sum_R + sum_B)
 
                 ExG = 2 * g - r - b
-
                 Exg_samples.append(ExG)
 
         hands_frame = cv2.rectangle(hands_frame, (70, 200), (200, 330), (255, 0, 0), 2)
@@ -184,17 +187,46 @@ out_hands.release()
 cv2.destroyAllWindows()
 
 # VPG signal processing
-N = len(Exg_samples)
-time = N / 15
-t = np.linspace(0, time, N)
+signal = Exg_samples
+N = len(signal)
+Fs = 15.0
+T = 1.0 / Fs
+N_fft = 512
+t = np.linspace(0, N*T, N)
+y = signal
 
-plot.figure(1)
-plot.plot(t, Exg_samples)
-y = butter_bandpass_filter(Exg_samples, 0.583, 3, 15, order=2)
-plot.plot(t, y)
-plot.xlabel('Time(s)')
-plot.title('VPG signal')
-plot.show()
+plt.figure(1)
+plt.plot(t, signal)
+y = butter_bandpass_filter(signal, 0.583, 3, 15, order=2)
+plt.plot(t, y)
+plt.xlabel('Time(s)')
+plt.title('VPG signal')
+plt.show()
+
+mean_removed = np.ones_like(y)*np.mean(y)
+y = y - mean_removed
+
+# Calculate fft
+yf = fft(y, n=N_fft)
+xf = np.arange(0, Fs, Fs/N_fft)
+
+
+# Plot the fft #
+plt.figure(2)
+ax = plt.subplot(111)
+pt, = ax.plot(xf, np.abs(yf), lw=2.0, c='b')
+p = plt.Rectangle((Fs/2, 0), Fs/2, ax.get_ylim()[1], facecolor="grey", fill=True, alpha=0.75, hatch="/", zorder=3)
+ax.add_patch(p)
+ax.set_xlim((ax.get_xlim()[0], Fs))
+ax.set_title('FFT', fontsize=16, fontweight="bold")
+ax.set_ylabel('FFT magnitude (power)')
+ax.set_xlabel('Frequency (Hz)')
+plt.legend((p,), ('mirrored',))
+ax.grid()
+plt.show()
+
+
+
 
 
 
